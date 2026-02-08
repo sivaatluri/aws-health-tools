@@ -10,13 +10,13 @@ def lambda_handler(event, context):
     access_key_id = details['affectedEntities'][0]['entityValue']
     print('Looking up username for access key pair...')
     username = get_username_from_key(access_key_id)
-    print('Deleting exposed access key pair...')
-    delete_exposed_key_pair(username, access_key_id)
+    print('Deactivating exposed access key pair...')
+    deactivate_exposed_key_pair(username, access_key_id)
     return {
         "account_id": account_id,
         "time_discovered": time_discovered,
         "username": username,
-        "deleted_key": access_key_id
+        "deactivated_key": access_key_id
     }
 
 
@@ -42,23 +42,24 @@ def get_username_from_key(access_key_id):
     return response['UserName']
 
 
-def delete_exposed_key_pair(username, access_key_id):
-    """ Deletes IAM access key pair identified by access key ID for specified user.
+def deactivate_exposed_key_pair(username, access_key_id):
+    """ Deactivates IAM access key pair identified by access key ID for specified user.
 
     Args:
-        username (string): Username of IAM user to delete key pair for.
-        access_key_id (string): IAM access key ID to identify key pair to delete.
+        username (string): Username of IAM user to deactivate key pair for.
+        access_key_id (string): IAM access key ID to identify key pair to deactivate.
 
     Returns:
         (None)
 
     """
     try:
-        iam.delete_access_key(
+        iam.update_access_key(
             UserName=username,
-            AccessKeyId=access_key_id
+            AccessKeyId=access_key_id,
+            Status='Inactive'
         )
     except Exception as e:
         print(e)
-        print('Unable to delete access key "{}" for user "{}".'.format(access_key_id, username))
+        print('Unable to deactivate access key "{}" for user "{}".'.format(access_key_id, username))
         raise(e)
